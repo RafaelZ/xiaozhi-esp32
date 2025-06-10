@@ -13,7 +13,7 @@
 #include "services/gatt/ble_svc_gatt.h"
 #include "store/config/ble_store_config.h"  // 相对路径引用
 
-#include "blufi_example.h" // For BLUFI_INFO/ERROR macros and TAG
+#include "blufi_helper.h" // For BLUFI_INFO/ERROR macros and TAG
 
 #ifndef BLUFI_DEVICE_NAME
 #define BLUFI_DEVICE_NAME "MOJI_ESP32_BLUFI"
@@ -27,7 +27,7 @@ static void bleprph_host_task(void *param) {
     ESP_LOGI(BLUFI_HELPER_TAG, "BLE Host Task Started");
     nimble_port_run();
     nimble_port_freertos_deinit();
-    ESP_LOGI(BLUFI_Helper_TAG, "BLE Host Task Ended");
+    ESP_LOGI(BLUFI_HELPER_TAG, "BLE Host Task Ended");
     vTaskDelete(NULL);
 }
 
@@ -47,7 +47,7 @@ static void blufi_on_sync(void) {
 // This function encapsulates NimBLE stack initialization for BluFi.
 esp_err_t app_blufi_nimble_stack_init(void) {
     esp_err_t err;
-    ESP_LOGI(BLUFI_Helper_TAG, "Initializing NimBLE stack for BluFi");
+    ESP_LOGI(BLUFI_HELPER_TAG, "Initializing NimBLE stack for BluFi");
 
     err = nimble_port_init();
     if (err != ESP_OK) {
@@ -85,13 +85,13 @@ esp_err_t app_blufi_nimble_stack_init(void) {
 
     nimble_port_freertos_init(bleprph_host_task);
 
-    ESP_LOGI(BLUFI_Helper_TAG, "NimBLE stack initialization complete.");
+    ESP_LOGI(BLUFI_HELPER_TAG, "NimBLE stack initialization complete.");
     return ESP_OK;
 }
 
 // This function encapsulates NimBLE stack de-initialization.
 esp_err_t app_blufi_nimble_stack_deinit(void) {
-    ESP_LOGI(BLUFI_Helper_TAG, "De-initializing NimBLE stack for BluFi");
+    ESP_LOGI(BLUFI_HELPER_TAG, "De-initializing NimBLE stack for BluFi");
     esp_err_t ret = ESP_OK;
 
     if (nimble_port_stop() != 0) {
@@ -108,6 +108,6 @@ esp_err_t app_blufi_nimble_stack_deinit(void) {
 
     nimble_port_deinit();
 
-    ESP_LOGI(BLUFI_Helper_TAG, "NimBLE stack de-initialization attempt complete.");
+    ESP_LOGI(BLUFI_HELPER_TAG, "NimBLE stack de-initialization attempt complete.");
     return ret;
 }

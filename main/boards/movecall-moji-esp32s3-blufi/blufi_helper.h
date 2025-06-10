@@ -13,9 +13,9 @@
 #include "esp_log.h" // For ESP_LOGI, ESP_LOGE
 
 // Logging macros
-#define BLUFI_Helper_TAG "BLUFI_Helper"
-#define BLUFI_INFO(fmt, ...)   ESP_LOGI(BLUFI_Helper_TAG, fmt, ##__VA_ARGS__)
-#define BLUFI_ERROR(fmt, ...)  ESP_LOGE(BLUFI_Helper_TAG, fmt, ##__VA_ARGS__)
+#define BLUFI_HELPER_TAG "BLUFI_Helper"
+#define BLUFI_INFO(fmt, ...)   ESP_LOGI(BLUFI_HELPER_TAG, fmt, ##__VA_ARGS__)
+#define BLUFI_ERROR(fmt, ...)  ESP_LOGE(BLUFI_HELPER_TAG, fmt, ##__VA_ARGS__)
 
 #ifdef __cplusplus
 extern "C" {

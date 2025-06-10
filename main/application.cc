@@ -373,6 +373,7 @@ void Application::StopListening() {
 }
 
 void Application::Start() {
+    ESP_LOGI(TAG, "Application::Start");
     auto& board = Board::GetInstance();
     SetDeviceState(kDeviceStateStarting);
 

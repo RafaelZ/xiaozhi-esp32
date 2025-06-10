@@ -11,7 +11,7 @@ protected:
     // 声明一个布尔成员变量 wifi_config_mode_，用于指示是否处于 Wi-Fi 配置模式，并初始化为 false。
     bool wifi_config_mode_ = false;
     // 声明一个受保护的成员函数 EnterWifiConfigMode()，用于进入 Wi-Fi 配置模式。
-    void EnterWifiConfigMode();
+    virtual void EnterWifiConfigMode();
     // 声明一个虚函数 GetBoardJson()，它重写了基类 Board 的同名函数，返回板子的 JSON 字符串。
     virtual std::string GetBoardJson() override;
 
