@@ -1,3 +1,13 @@
-idf_component_register(SRCS "movecall_moji_esp32s3_blufi.cc" "blufi_example_helpers.c"
-                    INCLUDE_DIRS "."
-                    REQUIRES LVGL)
+list(APPEND srcs
+        blufi_init.c
+        blufi_security.c
+)
+
+list(APPEND incs
+        .
+)
+
+idf_component_register(SRCS "${srcs}"
+                       INCLUDE_DIRS "${incs}"
+                       EMBED_TXTFILES "${assets}"
+                       REQUIRES driver esp_wifi bt nvs_flash json esp_timer mbedtls) 

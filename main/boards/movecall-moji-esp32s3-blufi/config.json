@@ -3,7 +3,12 @@
     "builds": [
         {
             "name": "movecall-moji-esp32s3-blufi",
-            "sdkconfig_append": []
+            "sdkconfig_append": [
+                "CONFIG_BT_ENABLED=y",
+                "CONFIG_BT_NIMBLE_ENABLED=y",
+                "CONFIG_BT_NIMBLE_BLUFI_ENABLE=y",
+                "CONFIG_BT_CTRL_RUN_IN_FLASH_ONLY=y"
+            ]
         }
     ]
 }
