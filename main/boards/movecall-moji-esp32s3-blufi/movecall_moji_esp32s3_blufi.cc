@@ -1,5 +1,5 @@
 #include "boards/common/wifi_board.h"
-#include "blufi_example_helpers.h"
+#include "blufi_helper.h"
 #include "esp_bt.h"
 // #include "blufi_example.h" // To be created from example
 #include "nvs_flash.h"

@@ -10,7 +10,7 @@
 // freertos/FreeRTOS.h and freertos/task.h are not strictly needed for this file's functionality
 // as malloc/free are standard library.
 #include "esp_random.h" // For esp_fill_random
-#include "esp_log.h"    // For ESP_LOGE, ESP_LOGI (though typically used via blufi_example.h macros)
+#include "esp_log.h"    // For ESP_LOGE, ESP_LOGI (though typically used via BLUFI_Helper.h macros)
 
 #include "esp_blufi_api.h" // For esp_blufi_error_state_t and btc_blufi_report_error extern
 #include "blufi_example.h"

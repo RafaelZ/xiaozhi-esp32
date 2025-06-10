@@ -24,10 +24,10 @@ void ble_store_config_init(void);
 
 // NimBLE Host task
 static void bleprph_host_task(void *param) {
-    ESP_LOGI(BLUFI_EXAMPLE_TAG, "BLE Host Task Started");
+    ESP_LOGI(BLUFI_HELPER_TAG, "BLE Host Task Started");
     nimble_port_run();
     nimble_port_freertos_deinit();
-    ESP_LOGI(BLUFI_EXAMPLE_TAG, "BLE Host Task Ended");
+    ESP_LOGI(BLUFI_Helper_TAG, "BLE Host Task Ended");
     vTaskDelete(NULL);
 }
 
@@ -47,7 +47,7 @@ static void blufi_on_sync(void) {
 // This function encapsulates NimBLE stack initialization for BluFi.
 esp_err_t app_blufi_nimble_stack_init(void) {
     esp_err_t err;
-    ESP_LOGI(BLUFI_EXAMPLE_TAG, "Initializing NimBLE stack for BluFi");
+    ESP_LOGI(BLUFI_Helper_TAG, "Initializing NimBLE stack for BluFi");
 
     err = nimble_port_init();
     if (err != ESP_OK) {
@@ -85,13 +85,13 @@ esp_err_t app_blufi_nimble_stack_init(void) {
 
     nimble_port_freertos_init(bleprph_host_task);
 
-    ESP_LOGI(BLUFI_EXAMPLE_TAG, "NimBLE stack initialization complete.");
+    ESP_LOGI(BLUFI_Helper_TAG, "NimBLE stack initialization complete.");
     return ESP_OK;
 }
 
 // This function encapsulates NimBLE stack de-initialization.
 esp_err_t app_blufi_nimble_stack_deinit(void) {
-    ESP_LOGI(BLUFI_EXAMPLE_TAG, "De-initializing NimBLE stack for BluFi");
+    ESP_LOGI(BLUFI_Helper_TAG, "De-initializing NimBLE stack for BluFi");
     esp_err_t ret = ESP_OK;
 
     if (nimble_port_stop() != 0) {
@@ -108,6 +108,6 @@ esp_err_t app_blufi_nimble_stack_deinit(void) {
 
     nimble_port_deinit();
 
-    ESP_LOGI(BLUFI_EXAMPLE_TAG, "NimBLE stack de-initialization attempt complete.");
+    ESP_LOGI(BLUFI_Helper_TAG, "NimBLE stack de-initialization attempt complete.");
     return ret;
 }
