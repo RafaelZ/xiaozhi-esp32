@@ -34,6 +34,29 @@
 LV_FONT_DECLARE(font_puhui_20_4);
 LV_FONT_DECLARE(font_awesome_20_4);
 
+// Define constants used by helper methods if not globally available
+#define EXAMPLE_WIFI_CONNECTION_MAXIMUM_RETRY 5
+#define EXAMPLE_INVALID_RSSI -128
+#define EXAMPLE_INVALID_REASON 255
+// const int CONNECTED_BIT = BIT0; // If using event group bits
+
+#if CONFIG_ESP_WIFI_AUTH_OPEN
+#define EXAMPLE_WIFI_SCAN_AUTH_MODE_THRESHOLD WIFI_AUTH_OPEN
+#elif CONFIG_ESP_WIFI_AUTH_WEP
+#define EXAMPLE_WIFI_SCAN_AUTH_MODE_THRESHOLD WIFI_AUTH_WEP
+#elif CONFIG_ESP_WIFI_AUTH_WPA_PSK
+#define EXAMPLE_WIFI_SCAN_AUTH_MODE_THRESHOLD WIFI_AUTH_WPA_PSK
+#elif CONFIG_ESP_WIFI_AUTH_WPA2_PSK
+#define EXAMPLE_WIFI_SCAN_AUTH_MODE_THRESHOLD WIFI_AUTH_WPA2_PSK
+#elif CONFIG_ESP_WIFI_AUTH_WPA_WPA2_PSK
+#define EXAMPLE_WIFI_SCAN_AUTH_MODE_THRESHOLD WIFI_AUTH_WPA_WPA2_PSK
+#elif CONFIG_ESP_WIFI_AUTH_WPA3_PSK
+#define EXAMPLE_WIFI_SCAN_AUTH_MODE_THRESHOLD WIFI_AUTH_WPA3_PSK
+#elif CONFIG_ESP_WIFI_AUTH_WPA2_WPA3_PSK
+#define EXAMPLE_WIFI_SCAN_AUTH_MODE_THRESHOLD WIFI_AUTH_WPA2_WPA3_PSK
+#elif CONFIG_ESP_WIFI_AUTH_WAPI_PSK
+#define EXAMPLE_WIFI_SCAN_AUTH_MODE_THRESHOLD WIFI_AUTH_WAPI_PSK
+#endif
 
 class CustomLcdDisplay : public SpiLcdDisplay {
 public:
@@ -211,7 +234,6 @@ public:
     }
 };
 
-DECLARE_BOARD(MovecallMojiESP32S3BLUFI);
 
 void MovecallMojiESP32S3BLUFI::InitializeBluFi() {
     esp_err_t ret;
@@ -566,9 +588,5 @@ void MovecallMojiESP32S3BLUFI::ip_event_handler_static(void* arg, esp_event_base
 
 wifi_config_t MovecallMojiESP32S3BLUFI::sta_config_;
 MovecallMojiESP32S3BLUFI* MovecallMojiESP32S3BLUFI::s_blufi_instance = nullptr;
+DECLARE_BOARD(MovecallMojiESP32S3BLUFI);
 
-// Define constants used by helper methods if not globally available
-#define EXAMPLE_WIFI_CONNECTION_MAXIMUM_RETRY 5
-#define EXAMPLE_INVALID_RSSI -128
-#define EXAMPLE_INVALID_REASON 255
-// const int CONNECTED_BIT = BIT0; // If using event group bits

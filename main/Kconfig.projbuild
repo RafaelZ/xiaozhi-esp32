@@ -181,6 +181,9 @@ choice BOARD_TYPE
     config BOARD_TYPE_MOVECALL_MOJI_ESP32S3
         bool "Movecall Moji 小智AI衍生版"
         depends on IDF_TARGET_ESP32S3
+    config BOARD_TYPE_MOVECALL_MOJI_ESP32S3_BLUFI
+        bool "Movecall Moji 小智AI 蓝牙版"
+        depends on IDF_TARGET_ESP32S3    
     config BOARD_TYPE_MOVECALL_CUICAN_ESP32S3
         bool "Movecall CuiCan 璀璨·AI吊坠"
         depends on IDF_TARGET_ESP32S3
