@@ -1,7 +1,7 @@
-#include "board.h" // Assuming 'Board' base class is defined here
-#include "esp_blufi_api.h"
+#include "boards/common/wifi_board.h"
+#include "blufi_example_helpers.h"
 #include "esp_bt.h"
-#include "blufi_example.h" // To be created from example
+// #include "blufi_example.h" // To be created from example
 #include "nvs_flash.h"
 #include "esp_netif.h"
 #include "esp_event.h"
@@ -83,7 +83,7 @@ public:
     }
 };
 
-class MovecallMojiESP32S3BLUFI : public Board {
+class MovecallMojiESP32S3BLUFI : public WifiBoard {
 private:
     // BluFi related members
     EventGroupHandle_t wifi_event_group_; // For signaling Wi-Fi events if needed by other logic
@@ -100,7 +100,7 @@ private:
     static MovecallMojiESP32S3BLUFI* s_blufi_instance; // For static BluFi callback
 
     // Methods
-    void InitializeBluFi();
+    // void InitializeBluFi(); // Removed, logic moved to EnterWifiConfigMode
     void blufi_event_callback(esp_blufi_cb_event_t event, esp_blufi_cb_param_t *param);
     void wifi_event_handler(esp_event_base_t event_base, int32_t event_id, void* event_data);
     void ip_event_handler(int32_t event_id, void* event_data);
@@ -177,9 +177,8 @@ private:
 
     void InitializeButtons() {
         boot_button_.OnClick([this]() {
-            Application::GetInstance().ToggleChatState();
-            // Removed Wi-Fi reset logic, BluFi handles provisioning.
-            // If manual re-provisioning is needed, it would be more involved.
+            ESP_LOGI(TAG, "Boot button pressed, requesting Wi-Fi configuration reset (BluFi).");
+            this->ResetWifiConfiguration();
         });
     }
 
@@ -191,25 +190,15 @@ private:
     }
 
 public:
+    virtual void EnterWifiConfigMode() override;
+
     MovecallMojiESP32S3BLUFI() : boot_button_(BOOT_BUTTON_GPIO) {  
         InitializeCodecI2c();
         InitializeSpi();
         InitializeGc9a01Display();
         InitializeButtons();
         InitializeIot();
-
-        s_blufi_instance = this; // Set static instance pointer
-        ble_is_connected_ = false;
-        blufi_sta_got_ip_ = false;
-        blufi_sta_is_connecting_ = false;
-        example_wifi_retry_count = 0;
-        memset(blufi_sta_bssid_, 0, sizeof(blufi_sta_bssid_));
-        memset(blufi_sta_ssid_, 0, sizeof(blufi_sta_ssid_));
-        blufi_sta_ssid_len_ = 0;
-        memset(&blufi_sta_conn_info_, 0, sizeof(esp_blufi_extra_info_t));
-
-        InitializeBluFi();
-        GetBacklight()->RestoreBrightness();
+        // BluFi initialization is now deferred to EnterWifiConfigMode
     }
 
     virtual Led* GetLed() override {
@@ -234,10 +223,22 @@ public:
     }
 };
 
+void MovecallMojiESP32S3BLUFI::EnterWifiConfigMode() {
+    ESP_LOGI(TAG, "Entering BluFi Wi-Fi Configuration Mode...");
+    Application::GetInstance().SetDeviceState(kDeviceStateWifiConfiguring);
 
-void MovecallMojiESP32S3BLUFI::InitializeBluFi() {
+    s_blufi_instance = this;
+    ble_is_connected_ = false;
+    blufi_sta_got_ip_ = false;
+    blufi_sta_is_connecting_ = false;
+    example_wifi_retry_count = 0;
+    memset(blufi_sta_bssid_, 0, sizeof(blufi_sta_bssid_));
+    memset(blufi_sta_ssid_, 0, sizeof(blufi_sta_ssid_));
+    blufi_sta_ssid_len_ = 0;
+    memset(&blufi_sta_conn_info_, 0, sizeof(esp_blufi_extra_info_t));
+
     esp_err_t ret;
-    ESP_LOGI(TAG, "Initializing BluFi");
+    // ESP_LOGI(TAG, "Initializing BluFi"); // Already logged "Entering BluFi..."
 
     ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
@@ -282,31 +283,29 @@ void MovecallMojiESP32S3BLUFI::InitializeBluFi() {
         .checksum_func = blufi_crc_checksum,
     };
 
-    // Assuming NimBLE is used (CONFIG_BT_NIMBLE_ENABLED=y in sdkconfig)
-    // If not, esp_blufi_controller_init() for classic BT might be needed here.
-    // The blufi_init.c typically handles esp_nimble_init() etc. via esp_blufi_host_init().
+    // Initialize NimBLE stack specifically for BluFi using our helper
+    ret = app_blufi_nimble_stack_init();
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "app_blufi_nimble_stack_init failed: %s", esp_err_to_name(ret));
+        // Consider how to handle this error - board might not function for Wi-Fi
+        // Potentially set device state to error or revert?
+        return;
+    }
 
-        // Initialize NimBLE stack specifically for BluFi using our helper
-        ret = app_blufi_nimble_stack_init();
-        if (ret != ESP_OK) {
-            ESP_LOGE(TAG, "app_blufi_nimble_stack_init failed: %s", esp_err_to_name(ret));
-            // Consider how to handle this error - board might not function for Wi-Fi
-            return;
-        }
-
-        // Now register BluFi callbacks with the initialized stack
-        ret = esp_blufi_register_callbacks(&blufi_callbacks); // Use esp_blufi_register_callbacks
-        if (ret != ESP_OK) {
-            ESP_LOGE(TAG, "esp_blufi_register_callbacks failed: %s", esp_err_to_name(ret));
-            // app_blufi_nimble_stack_deinit(); // Attempt cleanup
-            return;
-        }
-        ESP_LOGI(TAG, "BluFi callbacks registered.");
+    // Now register BluFi callbacks with the initialized stack
+    ret = esp_blufi_register_callbacks(&blufi_callbacks);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "esp_blufi_register_callbacks failed: %s", esp_err_to_name(ret));
+        // app_blufi_nimble_stack_deinit(); // Attempt cleanup if possible
+        return;
+    }
+    ESP_LOGI(TAG, "BluFi callbacks registered.");
 
     blufi_record_wifi_conn_info(EXAMPLE_INVALID_RSSI, EXAMPLE_INVALID_REASON);
-    ESP_ERROR_CHECK(esp_wifi_start());
+    ESP_ERROR_CHECK(esp_wifi_start()); // This is critical to trigger WIFI_EVENT_STA_START
 
-    ESP_LOGI(TAG, "BLUFI Initialized, VERSION %04x", esp_blufi_get_version());
+    ESP_LOGI(TAG, "BLUFI Initialized and Wi-Fi Started, VERSION %04x", esp_blufi_get_version());
+    GetBacklight()->RestoreBrightness();
 }
 
 void MovecallMojiESP32S3BLUFI::blufi_event_callback_static(esp_blufi_cb_event_t event, esp_blufi_cb_param_t *param) {
@@ -331,12 +330,9 @@ void MovecallMojiESP32S3BLUFI::blufi_event_callback(esp_blufi_cb_event_t event, 
             ESP_LOGI(TAG, "Wi-Fi is currently attempting to connect (e.g., to a stored network). BluFi advertising will not start automatically.");
             // If this connection attempt fails, WIFI_EVENT_STA_DISCONNECTED will be triggered.
             // We might need logic there to then start BluFi advertising if appropriate.
-        } else {
-            // No current connection and no active attempt to connect to a stored network.
-            // This means either no stored config, or auto-connect attempt already failed and concluded.
-            ESP_LOGI(TAG, "Wi-Fi not connected and not attempting connection. Starting BluFi advertising for provisioning.");
-            esp_blufi_adv_start();
         }
+        // Removed explicit call to esp_blufi_adv_start() here.
+        // The BluFi stack should handle starting advertising automatically if needed after init.
         break;
     case ESP_BLUFI_EVENT_DEINIT_FINISH:
         ESP_LOGI(TAG, "BLUFI deinit finish");
@@ -474,42 +470,12 @@ void MovecallMojiESP32S3BLUFI::wifi_event_handler(esp_event_base_t event_base, i
         if (blufi_sta_is_connecting_) { // Only try to reconnect if we were in the process of connecting
             blufi_wifi_reconnect();
         }
-            // If all retries for an auto-connection have failed and BluFi is initialized but not advertising
-            // gl_sta_connected is the example's flag, use blufi_sta_got_ip_
-            if (!blufi_sta_got_ip_ && !blufi_sta_is_connecting_ && !ble_is_connected_) {
-                // Check if BluFi system is initialized (s_blufi_instance exists, or a similar flag)
-                // This check is to ensure we only try to start adv if BluFi itself is ready.
-                // Assuming BluFi is ready if we are in wifi_event_handler of this board.
-
-                // Check if this disconnect was the end of an auto-connect attempt (not a BluFi initiated one)
-                // This can be tricky. A simple way: if no BLE client is connected,
-                // and we just exhausted retries for a connection that wasn't initiated by a BluFi command.
-                // For now, if disconnected, not trying to connect anymore, and no BLE client, start ADV.
-                // This might conflict if user disconnects from AP via BluFi command, then BLE disconnects.
-                // A more robust flag like `is_auto_connecting_` might be needed.
-
-                // Current logic for retries: blufi_wifi_reconnect() sets blufi_sta_is_connecting_ to false after max retries.
-                // So, if blufi_sta_is_connecting_ is false here, and we are not connected, it means connection failed.
-                ESP_LOGI(TAG, "STA_DISCONNECTED: Connection attempt failed or lost, and no active BLE client. Considering starting BluFi advertising.");
-
-                // Start BluFi advertising if it's not already started and no BLE client is connected.
-                // The ESP_BLUFI_EVENT_INIT_FINISH might have already decided not to start it.
-                // This ensures that if auto-connection fails, BluFi becomes available.
-                // We need to be careful not to start it if a BLE client *was* connected and caused the disconnect.
-
-                // Simpler: If not connected, and not currently trying to connect via esp_wifi_connect,
-                // and BluFi is initialized, let ESP_BLUFI_EVENT_INIT_FINISH decide or start here.
-                // The ESP_BLUFI_EVENT_INIT_FINISH check is primary. This is a fallback.
-                // If ESP_BLUFI_EVENT_INIT_FINISH occurred when blufi_sta_is_connecting_ was true, it wouldn't have advertised.
-                // Now, if blufi_sta_is_connecting_ becomes false due to failure, we should start it.
-
-                // Check if BluFi is initialized (a simple proxy for this is if esp_blufi_get_version() > 0 or similar)
-                // For now, assume if these handlers are active, BluFi has been initialized.
-                if (!ble_is_connected_) { // Only if no phone app is currently interacting via BLE
-                    ESP_LOGI(TAG, "STA_DISCONNECTED: Auto-connection failed or disconnected. Starting BluFi advertising.");
-                    esp_blufi_adv_start();
-                }
-            }
+        // Removed a conditional block here that previously called esp_blufi_adv_start().
+        // The BluFi stack should manage advertising state based on BLE connection status
+        // and whether it has successfully provisioned. Manual restart of advertising here
+        // upon STA_DISCONNECTED (especially if auto-connect fails) is generally not needed
+        // as the main trigger for provisioning advertising is typically the initial state
+        // or an explicit user action (like boot button).
         break;
     default:
         ESP_LOGI(TAG, "Unhandled Wi-Fi event: %ld", event_id);
