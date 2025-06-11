@@ -1,6 +1,8 @@
 list(APPEND srcs
         blufi_init.c
         blufi_security.c
+        doit_blufi_init.c
+        doit_blufi.c
 )
 
 list(APPEND incs
