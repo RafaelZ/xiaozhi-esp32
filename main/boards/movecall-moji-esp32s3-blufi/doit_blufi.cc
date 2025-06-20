@@ -12,7 +12,7 @@
 #include "esp_log.h"
 #include "nvs.h"
 #include "nvs_flash.h"
-
+#include <ssid_manager.h>
 #if CONFIG_BT_CONTROLLER_ENABLED || !CONFIG_BT_NIMBLE_ENABLED
 #include "esp_bt.h"
 #endif
@@ -122,6 +122,11 @@ static void ip_event_handler(void* arg, esp_event_base_t event_base,
         gl_sta_got_ip = true;
         if (ble_is_connected == true) {
             esp_blufi_send_wifi_conn_report(mode, ESP_BLUFI_STA_CONN_SUCCESS, softap_get_current_connection_number(), &info);
+            //TODO ssid manager 保存
+            SsidManager::GetInstance().AddSsid((const char*)gl_sta_ssid, (const char*)sta_config.sta.password);
+            ESP_LOGI(TAG, "Restarting in 3 second");
+            vTaskDelay(pdMS_TO_TICKS(3000));
+            esp_restart();
         } else {
             ESP_LOGI(TAG, "BLUFI BLE is not connected yet\n");
         }
@@ -597,7 +602,7 @@ void blufi_wifi_start_connect() {
 
   
   }
-void doit_blufi_init(void)
+void doit_blufi_init()
 {
     esp_err_t ret;
     ESP_ERROR_CHECK(nvs_open(NVS_PARTITION_NAME, NVS_READWRITE, &nvs_handle_));

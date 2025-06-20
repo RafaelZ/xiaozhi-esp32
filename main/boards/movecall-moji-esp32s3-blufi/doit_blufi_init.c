@@ -131,6 +131,7 @@ esp_err_t esp_blufi_host_init(void)
         snprintf(blufi_device_name, sizeof(blufi_device_name), "DTXZ_%02x%02x%02x%02x%02x%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
     /* Set the default device name. */
     rc = ble_svc_gap_device_name_set(blufi_device_name);
+    ESP_LOGE(TAG, "blufii_device_name %s\n", blufi_device_name);
     assert(rc == 0);
 
     /* XXX Need to have template for store */
